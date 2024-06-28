@@ -55,7 +55,7 @@ def reverse_dns_query(ip):
         resolver = dns.resolver.Resolver()
         return str(resolver.resolve(addr, 'PTR')[0])[:-1]
     except Exception:
-        return ('(DNS Error)')
+        return '(DNS Error)'
 
 
 def dns_query(name, type='A'):
@@ -74,7 +74,7 @@ def dns_query(name, type='A'):
         elif type == 'SOA':
             return str(answers[0]).split()[0]
     except Exception:
-        return ('(DNS Error)')
+        return '(DNS Error)'
 
 
 def asn_name_query(asn):
