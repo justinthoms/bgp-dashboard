@@ -16,13 +16,12 @@ def db_connect() -> Database:
     return client["bgp"]
 
 
-def find_network(ip, netmask, db=None):
+def find_network(ip, netmask):
     """Given an IPv4 or IPv6 address, recursively search for and return the most
        specific prefix in the MongoDB collection that is active.
     """
     try:
-        if not db:
-            db = db_connect()
+        db = db_connect()
         network = str(ipaddress.ip_network(ipaddress.ip_address(ip)).supernet(new_prefix=netmask))
         result = db['bgp'].find_one({'_id': network, 'active': True})
         if result is not None:
@@ -30,7 +29,7 @@ def find_network(ip, netmask, db=None):
         elif netmask == 0:
             return None
         else:
-            return find_network(ip, netmask - 1, db)
+            return find_network(ip, netmask - 1)
     except Exception:
         return None
 
