@@ -170,15 +170,19 @@ def main():
     db = db_connect()
     initialize_database(db)
     for line in sys.stdin:
-        prefix_from_gobgp = build_json(get_update_entry(line))
+        try:
+            prefix_from_gobgp = build_json(get_update_entry(line))
 
-        prefix_from_database = db['bgp'].find_one({'_id': prefix_from_gobgp['_id']})
+            prefix_from_database = db['bgp'].find_one({'_id': prefix_from_gobgp['_id']})
 
-        if prefix_from_database:
-            updated_prefix = update_prefix(prefix_from_gobgp, prefix_from_database)
-            db['bgp'].update_one({"_id": prefix_from_database['_id']},  {'$set': updated_prefix}, upsert=True)
-        else:
-            db['bgp'].update_one({"_id": prefix_from_gobgp['_id']},  {'$set': prefix_from_gobgp}, upsert=True)
+            if prefix_from_database:
+                updated_prefix = update_prefix(prefix_from_gobgp, prefix_from_database)
+                db['bgp'].update_one({"_id": prefix_from_database['_id']}, {'$set': updated_prefix}, upsert=True)
+            else:
+                db['bgp'].update_one({"_id": prefix_from_gobgp['_id']}, {'$set': prefix_from_gobgp}, upsert=True)
+
+        except TypeError:
+            print(f"TypeError in Line: {line}")
 
 
 if __name__ == "__main__":

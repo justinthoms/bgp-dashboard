@@ -203,7 +203,7 @@ def get_domain(domain):
     for ns in name_servers:
         if org in ns.lower():
             local_ns = ns.lower()
-    if local_ns is '':
+    if local_ns == '':
         return jsonify({})
     else:
         domain_ip = str(dns_query(local_ns))
