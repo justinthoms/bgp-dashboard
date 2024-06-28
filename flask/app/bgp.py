@@ -59,9 +59,9 @@ def get_asn_prefixes(asn):
     prefixes = []
 
     if asn == C.DEFAULT_ASN:
-        routes = db.bgp.find({'origin_asn': None, 'active': True})
+        routes = list(db['bgp'].find({'origin_asn': None, 'active': True}))
     else:
-        routes = db.bgp.find({'origin_asn': asn, 'active': True})
+        routes = list(db['bgp'].find({'origin_asn': asn, 'active': True}))
 
     for prefix in routes:
         prefixes.append({'prefix': prefix['_id'],
@@ -77,7 +77,7 @@ def get_asn_prefixes(asn):
 
     return jsonify({'asn': asn,
                     'name': asn_name_query(asn),
-                    'origin_prefix_count': routes.count(),
+                    'origin_prefix_count': len(routes),
                     'is_peer': is_peer(asn),
                     'origin_prefix_list': prefixes})
 
@@ -92,7 +92,7 @@ def get_downstream_asns(asn):
     db = myStats.db
     asn_list = []
     large_query = 200
-    downstream_asns = db.bgp.distinct('as_path.1', {'nexthop_asn': asn, 'active': True})
+    downstream_asns = db['bgp'].distinct('as_path.1', {'nexthop_asn': asn, 'active': True})
     for downstream in downstream_asns:
         if len(downstream_asns) > large_query:
             dns_name = "(LARGE QUERY - DNS LOOKUP DISABLED)"
@@ -112,7 +112,7 @@ def get_downstream_asns(asn):
 def get_originated_prefixes(asn):
     db = myStats.db
     originated = []
-    prefixes = db.bgp.find({'origin_asn': asn, 'active': True})
+    prefixes = db['bgp'].find({'origin_asn': asn, 'active': True})
     for prefix in prefixes:
         originated.append(prefix['_id'])
 
@@ -129,7 +129,7 @@ def get_originated_prefixes_version(asn, version):
     v = 4
     if version.lower() == 'ipv6':
         v = 6
-    prefixes = db.bgp.find({'origin_asn': asn, 'ip_version': v, 'active': True})
+    prefixes = db['bgp'].find({'origin_asn': asn, 'ip_version': v, 'active': True})
     for prefix in prefixes:
         originated.append(prefix['_id'])
 
@@ -143,7 +143,7 @@ def get_originated_prefixes_version(asn, version):
 def get_nexthop_prefixes(asn):
     db = myStats.db
     nexthop = []
-    prefixes = db.bgp.find({'nexthop_asn': asn, 'active': True})
+    prefixes = db['bgp'].find({'nexthop_asn': asn, 'active': True})
     for prefix in prefixes:
         nexthop.append(prefix['_id'])
 
@@ -160,7 +160,7 @@ def get_nexthop_prefixes_version(asn, version):
     v = 4
     if version.lower() == 'ipv6':
         v = 6
-    prefixes = db.bgp.find({'nexthop_asn': asn, 'ip_version': v, 'active': True})
+    prefixes = db['bgp'].find({'nexthop_asn': asn, 'ip_version': v, 'active': True})
     for prefix in prefixes:
         nexthop.append(prefix['_id'])
 
@@ -173,7 +173,7 @@ def get_nexthop_prefixes_version(asn, version):
 @app.route('/bgp/api/v1.0/asn/<int:asn>/transit', methods=['GET'])
 def get_transit_prefixes(asn):
     db = myStats.db
-    all_asns = db.bgp.find({'active': True})
+    all_asns = db['bgp'].find({'active': True})
     prefixes = []
 
     for prefix in all_asns:
@@ -211,7 +211,7 @@ def get_domain(domain):
         asn = ip_data.get('origin_asn')
         db = myStats.db
         originated = []
-        prefixes = db.bgp.find({'origin_asn': asn, 'active': True})
+        prefixes = db['bgp'].find({'origin_asn': asn, 'active': True})
         for prefix in prefixes:
             originated.append(prefix['_id'])
 

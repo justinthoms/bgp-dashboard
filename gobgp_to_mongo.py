@@ -2,6 +2,9 @@
 
 import sys
 import json
+
+from pymongo.database import Database
+
 import bgp_attributes as BGP
 from pymongo import MongoClient
 import pymongo
@@ -9,6 +12,7 @@ from copy import copy
 from datetime import datetime
 import ipaddress
 import logging
+
 # logging.basicConfig(level=logging.CRITICAL)
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -16,24 +20,26 @@ import logging
 MAX_PREFIX_HISTORY = 100  # None = unlimited (BGP flapping will likely kill DB if unlimited)
 
 
-def db_connect(host='mongodb'):
+def db_connect(host='mongodb') -> Database:
     """Return a connection to the Mongo Database."""
     client = MongoClient(host=host)
-    return client.bgp
+    return client['bgp']
 
 
-def initialize_database(db):
-    """Create indxes, and if the db contains any entries set them all to 'active': False"""
-    # db.bgp.drop()
-    db.bgp.create_index('nexthop')
-    db.bgp.create_index('nexthop_asn')
-    db.bgp.create_index([('nexthop', pymongo.ASCENDING), ('active', pymongo.ALL)])
-    db.bgp.create_index([('nexthop_asn', pymongo.ASCENDING), ('active', pymongo.ALL)])
-    db.bgp.create_index([('ip_version', pymongo.ASCENDING), ('active', pymongo.ALL)])
-    db.bgp.create_index([('origin_asn', pymongo.ASCENDING), ('ip_version', pymongo.ASCENDING), ('active', pymongo.ALL)])
-    db.bgp.create_index([('communities', pymongo.ASCENDING), ('active', pymongo.ALL)])
-    db.bgp.create_index([('as_path.1', pymongo.ASCENDING), ('nexthop_asn', pymongo.ASCENDING), ('active', pymongo.ALL)])
-    db.bgp.update_many(
+def initialize_database(db: Database):
+    """Create indexes, and if the db contains any entries set them all to 'active': False"""
+    # db['bgp'].drop()
+    db['bgp'].create_index('nexthop')
+    db['bgp'].create_index('nexthop_asn')
+    db['bgp'].create_index([('nexthop', pymongo.ASCENDING), ('active', pymongo.ASCENDING)])
+    db['bgp'].create_index([('nexthop_asn', pymongo.ASCENDING), ('active', pymongo.ASCENDING)])
+    db['bgp'].create_index([('ip_version', pymongo.ASCENDING), ('active', pymongo.ASCENDING)])
+    db['bgp'].create_index(
+        [('origin_asn', pymongo.ASCENDING), ('ip_version', pymongo.ASCENDING), ('active', pymongo.ASCENDING)])
+    db['bgp'].create_index([('communities', pymongo.ASCENDING), ('active', pymongo.ASCENDING)])
+    db['bgp'].create_index(
+        [('as_path.1', pymongo.ASCENDING), ('nexthop_asn', pymongo.ASCENDING), ('active', pymongo.ASCENDING)])
+    db['bgp'].update_many(
         {"active": True},  # Search for
         {"$set": {"active": False}})  # Replace with
 
@@ -46,7 +52,7 @@ def get_update_entry(line):
             if 'error' in update_entry:
                 return None
             else:
-                return(update_entry)
+                return update_entry
     except Exception as err:
         logging.error("Error in get_update_entry(line):", err)
         return None
@@ -64,7 +70,7 @@ def compare_prefixes(new, old):
 
 def community_32bit_to_string(number):
     """Given a 32bit number, convert to standard bgp community format XXX:XX"""
-    if number is not 0:
+    if number != 0:
         return f'{int(bin(number)[:-16], 2)}:{int(bin(number)[-16:], 2)}'  # PEP 498
 
 
@@ -165,12 +171,14 @@ def main():
     initialize_database(db)
     for line in sys.stdin:
         prefix_from_gobgp = build_json(get_update_entry(line))
-        prefix_from_database = db.bgp.find_one({'_id': prefix_from_gobgp['_id']})
+
+        prefix_from_database = db['bgp'].find_one({'_id': prefix_from_gobgp['_id']})
+
         if prefix_from_database:
             updated_prefix = update_prefix(prefix_from_gobgp, prefix_from_database)
-            db.bgp.update({"_id": prefix_from_database['_id']}, updated_prefix, upsert=True)
+            db['bgp'].update_one({"_id": prefix_from_database['_id']},  {'$set': updated_prefix}, upsert=True)
         else:
-            db.bgp.update({"_id": prefix_from_gobgp['_id']}, prefix_from_gobgp, upsert=True)
+            db['bgp'].update_one({"_id": prefix_from_gobgp['_id']},  {'$set': prefix_from_gobgp}, upsert=True)
 
 
 if __name__ == "__main__":
