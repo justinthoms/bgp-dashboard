@@ -48,7 +48,7 @@ Screenshot
 Install
 ---------
 ```
-$ git clone https://github.com/NetDevUG/bgp-dashboard.git
+$ git clone https://github.com/justinthoms/bgp-dashboard.git
 $ cd bgp-dashboard
 $ # modify ./gobgp/gobgpd.conf to peer with your network
 $ # modify ./flask/app/constants.py globals to use your ASN and BGP communities
