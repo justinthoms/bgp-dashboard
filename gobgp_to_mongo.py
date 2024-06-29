@@ -74,6 +74,11 @@ def community_32bit_to_string(number):
         return f'{int(bin(number)[:-16], 2)}:{int(bin(number)[-16:], 2)}'  # PEP 498
 
 
+def community_large_to_string(community: dict):
+    """Given a dict, convert to large bgp community format XXX:XXX:XXX"""
+    return f'{community['ASN']}:{community['LocalData1']}:{community['LocalData2']}'
+
+
 def build_json(update_entry):
     """Given an update entry from GoBGP, set the BGP attribue types as a
     key/value dict and return"""
@@ -142,6 +147,12 @@ def build_json(update_entry):
             logging.debug(f'Found MP_UNREACH_NLRI: {attribute}')
         if attribute['type'] == BGP.EXTENDED_COMMUNITIES:
             logging.debug(f'Found EXTENDED_COMMUNITIES: {attribute}')
+        if attribute['type'] == BGP.LARGE_COMMUNITIES:
+            try:
+                for community in attribute['value']:
+                    update_json['communities'].append(community_large_to_string(community))
+            except Exception:
+                logging.debug(f'Error processing LARGE_COMMUNITIES: {attribute}')
     if 'withdrawal' in update_entry:
         update_json['withdrawal'] = update_entry['withdrawal']
         update_json['active'] = False

@@ -96,7 +96,7 @@ class Stats(object):
     def communities_count(self):
         """Return a list of BGP communities and their count"""
         return [{'community': community,
-                 # 'count': self.db['bgp'].count_documents({'communities': {'$regex': str(community)}, 'active': True}),
+                 # 'count': self.anistdb['bgp'].count_documents({'communities': {'$regex': str(community)}, 'active': True}),
                  'count': self.db['bgp'].count_documents({'communities': str(community), 'active': True}),
                  'name': None if C.BGP_COMMUNITY_MAP.get(community) is None else C.BGP_COMMUNITY_MAP.get(community)}
                 for community in self.db['bgp'].distinct('communities') if community is not None]
