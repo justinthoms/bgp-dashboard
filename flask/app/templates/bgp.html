@@ -172,7 +172,7 @@
               <div class="col-md-12">
                 <div class="x_panel">
                   <div class="x_title">
-                    <h2>Peer Data <small>Updated every 60s</small></h2>
+                    <h2>Peer Data <small>Updated every 300s</small></h2>
                     <div class="clearfix"></div>
                   </div>
                   <div class="x_content">
@@ -466,7 +466,7 @@
   }
 
   jQuery(document).ready(update_counters());
-  setInterval(function() { update_counters() }, 2000);
+  setInterval(function() { update_counters() }, 20000);
 
   </script>
 
