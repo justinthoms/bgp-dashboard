@@ -76,7 +76,7 @@ def community_32bit_to_string(number):
 
 def community_large_to_string(community: dict):
     """Given a dict, convert to large bgp community format XXX:XXX:XXX"""
-    return f'{community['ASN']}:{community['LocalData1']}:{community['LocalData2']}'
+    return f"{community['ASN']}:{community['LocalData1']}:{community['LocalData2']}"
 
 
 def build_json(update_entry):
