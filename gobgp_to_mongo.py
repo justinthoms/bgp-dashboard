@@ -192,8 +192,8 @@ def main():
             else:
                 db['bgp'].update_one({"_id": prefix_from_gobgp['_id']}, {'$set': prefix_from_gobgp}, upsert=True)
 
-        except TypeError:
-            print(f"TypeError in Line: {line}")
+        except TypeError as e:
+            print(f"TypeError {e} in Line: {line}")
 
 
 if __name__ == "__main__":
